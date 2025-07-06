@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1FD012402E15301E00801634 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD0123F2E15301E00801634 /* WhisperKit */; };
+		1FD012432E15302D00801634 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD012422E15302D00801634 /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1FD012212E152FA100801634 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FD012402E15301E00801634 /* WhisperKit in Frameworks */,
+				1FD012432E15302D00801634 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = Dictaum;
 			packageProductDependencies = (
+				1FD0123F2E15301E00801634 /* WhisperKit */,
+				1FD012422E15302D00801634 /* KeyboardShortcuts */,
 			);
 			productName = Dictaum;
 			productReference = 1FD012122E152FA000801634 /* Dictaum.app */;
@@ -195,6 +204,10 @@
 			);
 			mainGroup = 1FD012092E152FA000801634;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1FD0123E2E15301E00801634 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+				1FD012412E15302D00801634 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1FD012132E152FA000801634 /* Products */;
 			projectDirPath = "";
@@ -402,7 +415,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Needed to paste the transcribed text into the front-most app.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Needed to capture speech for transcription.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -429,7 +445,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Needed to paste the transcribed text into the front-most app.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Needed to capture speech for transcription.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -551,6 +570,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1FD0123E2E15301E00801634 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		1FD012412E15302D00801634 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1FD0123F2E15301E00801634 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FD0123E2E15301E00801634 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+		1FD012422E15302D00801634 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FD012412E15302D00801634 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1FD0120A2E152FA000801634 /* Project object */;
 }
