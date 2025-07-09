@@ -27,7 +27,7 @@ struct ModelDownloadModal: View {
                 Text("Downloading Model")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundColor(.secondaryColor)
+                    .foregroundColor(.secondaryAccent)
                 
                 Text(modelInfo.displayName)
                     .font(.headline)

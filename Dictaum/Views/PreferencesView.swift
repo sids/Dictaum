@@ -65,7 +65,7 @@ struct GeneralTab: View {
             } header: {
                 Text("Appearance")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondaryColor)
+                    .foregroundColor(.secondaryAccent)
             }
             
             Section {
@@ -93,7 +93,7 @@ struct GeneralTab: View {
             } header: {
                 Text("Recording Shortcuts")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondaryColor)
+                    .foregroundColor(.secondaryAccent)
             }
         }
         .formStyle(.grouped)
@@ -142,7 +142,7 @@ struct ModelTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Currently Selected Model")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondaryColor)
+                            .foregroundColor(.secondaryAccent)
                         
                         ModelCard(
                             model: currentModel,
@@ -166,7 +166,7 @@ struct ModelTab: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Available Models")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondaryColor)
+                        .foregroundColor(.secondaryAccent)
                         .padding(.horizontal, 20)
                     
                     // Model Information
@@ -429,7 +429,7 @@ struct PermissionsTab: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Required Permissions")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondaryColor)
+                    .foregroundColor(.secondaryAccent)
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
                 
