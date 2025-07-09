@@ -128,7 +128,6 @@ class ModelManager: ObservableObject {
     @Published var currentDownloadingModel: String?
     
     private var downloadTask: Task<Void, Never>?
-    private var cancelDownload: (() -> Void)?
     
     private init() {
         setupInitialStates()
@@ -244,13 +243,41 @@ class ModelManager: ObservableObject {
         do {
             downloadStates[modelId] = .downloading(progress: 0.0)
             
-            let whisperKit = try await WhisperKit(
-                model: modelId,
-                download: true
+            // Extract variant from model ID
+            // "openai_whisper-base" -> "base"
+            // "openai_whisper-base.en" -> "base.en"
+            // "openai_whisper-large-v3" -> "large-v3"
+            let variant = modelId.replacingOccurrences(of: "openai_whisper-", with: "")
+            
+            // Download the model with real progress tracking
+            let modelFolder = try await WhisperKit.download(
+                variant: variant,
+                downloadBase: nil, // Use default Hugging Face CDN
+                useBackgroundSession: false, // Can't use background session in sandboxed app
+                from: "argmaxinc/whisperkit-coreml",
+                progressCallback: { [weak self] progress in
+                    Task { @MainActor in
+                        guard let self = self else { return }
+                        let fractionCompleted = progress.fractionCompleted
+                        self.downloadStates[modelId] = .downloading(progress: fractionCompleted)
+                        self.downloadProgress[modelId] = fractionCompleted
+                    }
+                }
             )
             
+            // Download complete, now initialize WhisperKit with the downloaded model
             downloadStates[modelId] = .warming
             
+            let whisperKit = try await WhisperKit(
+                modelFolder: modelFolder.path,
+                verbose: true,
+                logLevel: .debug,
+                prewarm: true,
+                load: true,
+                download: false
+            )
+            
+            // Warm up the model
             let warmupAudio = generateWarmupAudio()
             _ = try await whisperKit.transcribe(audioArray: warmupAudio)
             
@@ -271,10 +298,10 @@ class ModelManager: ObservableObject {
     
     func cancelCurrentDownload() {
         downloadTask?.cancel()
-        cancelDownload?()
         
         if let modelId = currentDownloadingModel {
             downloadStates[modelId] = .notDownloaded
+            downloadProgress[modelId] = 0.0
         }
         
         isDownloading = false
