@@ -52,8 +52,14 @@ class MicRecorder {
         inputNode = audioEngine.inputNode
         let recordingFormat = inputNode!.outputFormat(forBus: 0)
         
-        // Use the hardware format for the tap to avoid format mismatch
-        let tapFormat = recordingFormat
+        // Create a compatible tap format based on the hardware format
+        // but ensuring it matches what we can actually use
+        let tapFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: recordingFormat.sampleRate,
+            channels: recordingFormat.channelCount,
+            interleaved: false
+        )!
         
         let converter = AVAudioConverter(
             from: tapFormat,
