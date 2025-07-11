@@ -15,9 +15,23 @@ class SettingsStore: ObservableObject {
     
     @AppStorage("launchAtLogin") var launchAtLogin: Bool = false
     @AppStorage("selectedModel") var selectedModel: String = ""
+    @AppStorage("selectedLanguage") var selectedLanguage: String = "en"
     @Published var showDownloadModal: Bool = false
     @Published var downloadingModelId: String?
     @Published var selectedTab: PreferencesTab = .general
+    
+    // Transcription parameters
+    @AppStorage("temperature") var temperature: Double = 0.2
+    @AppStorage("beamSize") var beamSize: Int = 1
+    @AppStorage("bestOf") var bestOf: Int = 1
+    @AppStorage("topK") var topK: Int = 5
+    @AppStorage("enableTimestamps") var enableTimestamps: Bool = false
+    @AppStorage("selectedPreset") var selectedPreset: String = "balanced"
+    
+    // Advanced quality control parameters
+    @AppStorage("logProbThreshold") var logProbThreshold: Double = -1.0
+    @AppStorage("compressionRatioThreshold") var compressionRatioThreshold: Double = 2.4
+    @AppStorage("suppressBlank") var suppressBlank: Bool = true
     
     private init() {
         setupDefaultShortcuts()

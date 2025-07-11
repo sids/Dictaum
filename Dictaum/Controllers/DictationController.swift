@@ -114,6 +114,7 @@ class DictationController: ObservableObject {
         
         do {
             transcriber = try await Transcriber(modelName: selectedModel)
+            await updateTranscriberParameters()
             isTranscriberReady = true
             state = .idle
         } catch {
@@ -238,5 +239,30 @@ class DictationController: ObservableObject {
         
         try? await Task.sleep(nanoseconds: 3_000_000_000)
         state = .idle
+    }
+    
+    func updateTranscriberLanguage(_ language: String) async {
+        guard let transcriber = transcriber else { return }
+        
+        transcriber.setLanguage(language)
+        print("Updated transcriber language to: \(language)")
+    }
+    
+    func updateTranscriberParameters() async {
+        guard let transcriber = transcriber else { return }
+        
+        let settings = SettingsStore.shared
+        
+        transcriber.setTemperature(Float(settings.temperature))
+        transcriber.setBeamSize(settings.beamSize)
+        transcriber.setBestOf(settings.bestOf)
+        transcriber.topK = settings.topK
+        // topP not supported by WhisperKit
+        transcriber.enableTimestamps(settings.enableTimestamps)
+        transcriber.logProbThreshold = Float(settings.logProbThreshold)
+        transcriber.compressionRatioThreshold = Float(settings.compressionRatioThreshold)
+        transcriber.suppressBlank = settings.suppressBlank
+        
+        print("Updated transcriber parameters from settings")
     }
 }

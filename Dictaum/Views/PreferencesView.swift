@@ -11,7 +11,166 @@ import KeyboardShortcuts
 enum PreferencesTab: Int, CaseIterable {
     case general = 0
     case model = 1
-    case permissions = 2
+    case advanced = 2
+    case permissions = 3
+}
+
+enum LanguageOption: String, CaseIterable {
+    case english = "en"
+    case spanish = "es"
+    case french = "fr"
+    case german = "de"
+    case italian = "it"
+    case portuguese = "pt"
+    case russian = "ru"
+    case korean = "ko"
+    case chinese = "zh"
+    case japanese = "ja"
+    case arabic = "ar"
+    case turkish = "tr"
+    case polish = "pl"
+    case dutch = "nl"
+    case catalan = "ca"
+    case ukrainian = "uk"
+    case swedish = "sv"
+    case hindi = "hi"
+    case czech = "cs"
+    case hebrew = "he"
+    case persian = "fa"
+    case finnish = "fi"
+    case malay = "ms"
+    case slovak = "sk"
+    case danish = "da"
+    case tamil = "ta"
+    case norwegian = "no"
+    case thai = "th"
+    case urdu = "ur"
+    case croatian = "hr"
+    case bulgarian = "bg"
+    case lithuanian = "lt"
+    case latin = "la"
+    case maori = "mi"
+    case malayalam = "ml"
+    case welsh = "cy"
+    case telugu = "te"
+    case latvian = "lv"
+    case bengali = "bn"
+    case serbian = "sr"
+    case azerbaijani = "az"
+    case slovenian = "sl"
+    case kannada = "kn"
+    case estonian = "et"
+    case macedonian = "mk"
+    case breton = "br"
+    case basque = "eu"
+    case icelandic = "is"
+    case armenian = "hy"
+    case nepali = "ne"
+    case mongolian = "mn"
+    case bosnian = "bs"
+    case kazakh = "kk"
+    case albanian = "sq"
+    case swahili = "sw"
+    case galician = "gl"
+    case maltese = "mt"
+    case somali = "so"
+    case tagalog = "tl"
+    case uzbek = "uz"
+    case amharic = "am"
+    case georgian = "ka"
+    case byelorussian = "be"
+    case tajik = "tg"
+    case sindhi = "sd"
+    case gujarati = "gu"
+    case yiddish = "yi"
+    case lao = "lo"
+    case burmese = "my"
+    case khmer = "km"
+    case xhosa = "xh"
+    case zulu = "zu"
+    case afrikaans = "af"
+    case sanskrit = "sa"
+    case javanese = "jv"
+    
+    var displayName: String {
+        switch self {
+        case .english: return "English"
+        case .spanish: return "Spanish"
+        case .french: return "French"
+        case .german: return "German"
+        case .italian: return "Italian"
+        case .portuguese: return "Portuguese"
+        case .russian: return "Russian"
+        case .korean: return "Korean"
+        case .chinese: return "Chinese"
+        case .japanese: return "Japanese"
+        case .arabic: return "Arabic"
+        case .turkish: return "Turkish"
+        case .polish: return "Polish"
+        case .dutch: return "Dutch"
+        case .catalan: return "Catalan"
+        case .ukrainian: return "Ukrainian"
+        case .swedish: return "Swedish"
+        case .hindi: return "Hindi"
+        case .czech: return "Czech"
+        case .hebrew: return "Hebrew"
+        case .persian: return "Persian"
+        case .finnish: return "Finnish"
+        case .malay: return "Malay"
+        case .slovak: return "Slovak"
+        case .danish: return "Danish"
+        case .tamil: return "Tamil"
+        case .norwegian: return "Norwegian"
+        case .thai: return "Thai"
+        case .urdu: return "Urdu"
+        case .croatian: return "Croatian"
+        case .bulgarian: return "Bulgarian"
+        case .lithuanian: return "Lithuanian"
+        case .latin: return "Latin"
+        case .maori: return "Maori"
+        case .malayalam: return "Malayalam"
+        case .welsh: return "Welsh"
+        case .telugu: return "Telugu"
+        case .latvian: return "Latvian"
+        case .bengali: return "Bengali"
+        case .serbian: return "Serbian"
+        case .azerbaijani: return "Azerbaijani"
+        case .slovenian: return "Slovenian"
+        case .kannada: return "Kannada"
+        case .estonian: return "Estonian"
+        case .macedonian: return "Macedonian"
+        case .breton: return "Breton"
+        case .basque: return "Basque"
+        case .icelandic: return "Icelandic"
+        case .armenian: return "Armenian"
+        case .nepali: return "Nepali"
+        case .mongolian: return "Mongolian"
+        case .bosnian: return "Bosnian"
+        case .kazakh: return "Kazakh"
+        case .albanian: return "Albanian"
+        case .swahili: return "Swahili"
+        case .galician: return "Galician"
+        case .maltese: return "Maltese"
+        case .somali: return "Somali"
+        case .tagalog: return "Tagalog"
+        case .uzbek: return "Uzbek"
+        case .amharic: return "Amharic"
+        case .georgian: return "Georgian"
+        case .byelorussian: return "Byelorussian"
+        case .tajik: return "Tajik"
+        case .sindhi: return "Sindhi"
+        case .gujarati: return "Gujarati"
+        case .yiddish: return "Yiddish"
+        case .lao: return "Lao"
+        case .burmese: return "Burmese"
+        case .khmer: return "Khmer"
+        case .xhosa: return "Xhosa"
+        case .zulu: return "Zulu"
+        case .afrikaans: return "Afrikaans"
+        case .sanskrit: return "Sanskrit"
+        case .javanese: return "Javanese"
+        }
+    }
 }
 
 struct PreferencesView: View {
@@ -36,6 +195,13 @@ struct PreferencesView: View {
                     Label("Model", systemImage: "brain")
                 }
                 .tag(PreferencesTab.model)
+            
+            AdvancedTab(store: store)
+                .navigationTitle(PreferencesView.windowTitle)
+                .tabItem {
+                    Label("Advanced", systemImage: "slider.horizontal.3")
+                }
+                .tag(PreferencesTab.advanced)
             
             PermissionsTab(permissionManager: permissionManager)
                 .navigationTitle(PreferencesView.windowTitle)
@@ -64,6 +230,32 @@ struct GeneralTab: View {
                     }
             } header: {
                 Text("Appearance")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondaryAccent)
+            }
+            
+            Section {
+                Picker("Language", selection: $store.selectedLanguage) {
+                    ForEach(LanguageOption.allCases, id: \.self) { language in
+                        Text(language.displayName).tag(language.rawValue)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .onChange(of: store.selectedLanguage) { _, newValue in
+                    // Update transcriber language if available
+                    if let controller = DictationController.shared {
+                        Task {
+                            await controller.updateTranscriberLanguage(newValue)
+                        }
+                    }
+                }
+                
+                Text("Select the primary language for transcription. This setting works best with multilingual models.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            } header: {
+                Text("Transcription")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondaryAccent)
             }
@@ -595,6 +787,441 @@ struct PermissionStatusBadge: View {
             return .orange
         case .restricted:
             return .red
+        }
+    }
+}
+
+struct AdvancedTab: View {
+    @ObservedObject var store: SettingsStore
+    
+    private var presetHeaderText: String {
+        switch store.selectedPreset {
+        case "conservative":
+            return "Preset Parameters - Conservative"
+        case "balanced":
+            return "Preset Parameters - Balanced"
+        case "creative":
+            return "Preset Parameters - Creative"
+        case "custom":
+            return "Custom Parameters"
+        default:
+            return "Preset Parameters"
+        }
+    }
+    
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Conservative preset
+                    PresetOption(
+                        title: "Conservative",
+                        description: "Fast processing with basic accuracy",
+                        systemImage: "hare.fill",
+                        parameters: "Temp: 0.0 • Beam: 1 • Best: 1",
+                        isSelected: store.selectedPreset == "conservative",
+                        isRecommended: false
+                    ) {
+                        store.selectedPreset = "conservative"
+                        applyPreset("conservative")
+                    }
+                    
+                    // Balanced preset
+                    PresetOption(
+                        title: "Balanced",
+                        description: "Optimal balance of speed and accuracy",
+                        systemImage: "checkmark.circle.fill",
+                        parameters: "Temp: 0.2 • Beam: 3 • Best: 1",
+                        isSelected: store.selectedPreset == "balanced",
+                        isRecommended: true
+                    ) {
+                        store.selectedPreset = "balanced"
+                        applyPreset("balanced")
+                    }
+                    
+                    // Creative preset
+                    PresetOption(
+                        title: "Creative",
+                        description: "Highest accuracy with slower processing",
+                        systemImage: "tortoise.fill",
+                        parameters: "Temp: 0.4 • Beam: 5 • Best: 3",
+                        isSelected: store.selectedPreset == "creative",
+                        isRecommended: false
+                    ) {
+                        store.selectedPreset = "creative"
+                        applyPreset("creative")
+                    }
+                    
+                    Divider()
+                        .padding(.vertical, 4)
+                    
+                    // Custom preset
+                    PresetOption(
+                        title: "Custom",
+                        description: "Manual control over all parameters",
+                        systemImage: "slider.horizontal.3",
+                        parameters: nil,
+                        isSelected: store.selectedPreset == "custom",
+                        isRecommended: false
+                    ) {
+                        store.selectedPreset = "custom"
+                    }
+                }
+            } header: {
+                Text("Transcription Presets")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondaryAccent)
+            }
+            
+            // Parameters Section - Always visible
+            Section {
+                // Temperature
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Temperature")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Text(String(format: "%.1f", store.temperature))
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if store.selectedPreset == "custom" {
+                        Slider(value: $store.temperature, in: 0.0...1.0, step: 0.1)
+                            .onChange(of: store.temperature) { _, _ in
+                                updateTranscriberParameters()
+                            }
+                    } else {
+                        ProgressView(value: store.temperature, total: 1.0)
+                            .tint(.gray)
+                            .opacity(0.5)
+                    }
+                    
+                    Text("Controls randomness. Lower = more consistent, Higher = more creative")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                
+                // Beam Size
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Beam Size")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Text("\(store.beamSize)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if store.selectedPreset == "custom" {
+                        Slider(
+                            value: Binding(
+                                get: { Double(store.beamSize) },
+                                set: { store.beamSize = Int($0) }
+                            ),
+                            in: 1.0...5.0,
+                            step: 1.0
+                        )
+                        .onChange(of: store.beamSize) { _, _ in
+                            updateTranscriberParameters()
+                        }
+                    } else {
+                        ProgressView(value: Double(store.beamSize), total: 5.0)
+                            .tint(.gray)
+                            .opacity(0.5)
+                    }
+                    
+                    Text("Search width. Higher = more accurate but slower")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                
+                // Best Of
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Best Of")
+                            .font(.system(size: 13))
+                            .foregroundColor(store.selectedPreset == "custom" && store.temperature == 0.0 ? .secondary : .primary)
+                        Spacer()
+                        Text("\(store.bestOf)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if store.selectedPreset == "custom" {
+                        Slider(
+                            value: Binding(
+                                get: { Double(store.bestOf) },
+                                set: { store.bestOf = Int($0) }
+                            ),
+                            in: 1.0...5.0,
+                            step: 1.0
+                        )
+                        .disabled(store.temperature == 0.0)
+                        .onChange(of: store.bestOf) { _, _ in
+                            updateTranscriberParameters()
+                        }
+                    } else {
+                        ProgressView(value: Double(store.bestOf), total: 5.0)
+                            .tint(.gray)
+                            .opacity(0.5)
+                    }
+                    
+                    Text("Number of candidates to consider. Only used when temperature > 0")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                
+                // Top K
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Top K")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Text("\(store.topK)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if store.selectedPreset == "custom" {
+                        Slider(
+                            value: Binding(
+                                get: { Double(store.topK) },
+                                set: { store.topK = Int($0) }
+                            ),
+                            in: 1.0...50.0,
+                            step: 1.0
+                        )
+                        .onChange(of: store.topK) { _, _ in
+                            updateTranscriberParameters()
+                        }
+                    } else {
+                        ProgressView(value: Double(store.topK), total: 50.0)
+                            .tint(.gray)
+                            .opacity(0.5)
+                    }
+                    
+                    Text("Limits vocabulary choices. Lower = more focused")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                
+            } header: {
+                HStack {
+                    Text(presetHeaderText)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondaryAccent)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        if let url = URL(string: "https://github.com/jhj0517/Whisper-WebUI/wiki/Whisper-Advanced-Parameters") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        Image(systemName: "questionmark.circle")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondaryAccent)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Learn more about transcription parameters")
+                }
+            }
+            
+            // Quality Control Section - Only visible in custom mode
+            if store.selectedPreset == "custom" {
+                Section {
+                    // Log Probability Threshold
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Log Probability Threshold")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Text(String(format: "%.1f", store.logProbThreshold))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Slider(value: $store.logProbThreshold, in: -5.0...0.0, step: 0.1)
+                            .onChange(of: store.logProbThreshold) { _, _ in
+                                updateTranscriberParameters()
+                            }
+                        
+                        Text("Reject transcriptions below this confidence. -1.0 = moderate, 0.0 = strict")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 2)
+                    
+                    // Compression Ratio Threshold
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Compression Ratio Threshold")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Text(String(format: "%.1f", store.compressionRatioThreshold))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Slider(value: $store.compressionRatioThreshold, in: 1.5...3.0, step: 0.1)
+                            .onChange(of: store.compressionRatioThreshold) { _, _ in
+                                updateTranscriberParameters()
+                            }
+                        
+                        Text("Detect repetitive output. Lower = more sensitive to repetition")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 2)
+                    
+                    // Suppress Blank
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Suppress Blank Tokens", isOn: $store.suppressBlank)
+                            .onChange(of: store.suppressBlank) { _, _ in
+                                updateTranscriberParameters()
+                            }
+                        
+                        Text("Remove empty tokens from the beginning of transcription")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
+                    }
+                } header: {
+                    Text("Quality Control")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondaryAccent)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear {
+            // Apply the selected preset on appear
+            if store.selectedPreset != "custom" {
+                applyPreset(store.selectedPreset)
+            }
+        }
+    }
+    
+    private func applyPreset(_ preset: String) {
+        switch preset {
+        case "conservative":
+            store.temperature = 0.0
+            store.beamSize = 1
+            store.bestOf = 1
+        case "balanced":
+            store.temperature = 0.2
+            store.beamSize = 3
+            store.bestOf = 1
+        case "creative":
+            store.temperature = 0.4
+            store.beamSize = 5
+            store.bestOf = 3
+        default:
+            break // Custom - don't change values
+        }
+        
+        // Apply to transcriber if available
+        if let controller = DictationController.shared {
+            Task {
+                await controller.updateTranscriberParameters()
+            }
+        }
+    }
+    
+    private func updateTranscriberParameters() {
+        if let controller = DictationController.shared {
+            Task {
+                await controller.updateTranscriberParameters()
+            }
+        }
+    }
+}
+
+// Custom preset option view
+struct PresetOption: View {
+    let title: String
+    let description: String
+    let systemImage: String
+    let parameters: String?
+    let isSelected: Bool
+    let isRecommended: Bool
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                // Radio button
+                Image(systemName: isSelected ? "circle.inset.filled" : "circle")
+                    .foregroundColor(isSelected ? .accentColor : .secondary)
+                    .font(.system(size: 16))
+                    .frame(width: 20, height: 20)
+                    .padding(.top, 2)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        // Icon
+                        Image(systemName: systemImage)
+                            .foregroundColor(isSelected ? .accentColor : .secondary)
+                            .font(.system(size: 14))
+                        
+                        // Title
+                        Text(title)
+                            .font(.system(size: 14, weight: isSelected ? .medium : .regular))
+                            .foregroundColor(isSelected ? .primary : .primary.opacity(0.9))
+                        
+                        // Recommended badge
+                        if isRecommended {
+                            Text("RECOMMENDED")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor)
+                                .cornerRadius(4)
+                        }
+                        
+                        Spacer()
+                    }
+                    
+                    // Description
+                    Text(description)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                    
+                    // Parameters preview
+                    if let parameters = parameters {
+                        Text(parameters)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(isSelected ? .accentColor.opacity(0.8) : .secondary.opacity(0.8))
+                            .padding(.top, 2)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.accentColor.opacity(0.1) : (isHovered ? Color.gray.opacity(0.1) : Color.clear))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isHovered = hovering
         }
     }
 }

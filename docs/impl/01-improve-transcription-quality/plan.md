@@ -19,7 +19,7 @@ We will thoroughly test after every logical implementation point, even within a 
 The user will be asked to test changes when automated testing is insufficient or when subjective evaluation is needed (e.g., transcription quality, user interface improvements, audio processing effectiveness).
 
 ## Phase 1: Quick Wins - Audio Front-end & Decoder Parameters
-**Status**: TODO
+**Status**: DONE
 
 ### Objective
 Implement low-effort, high-payoff improvements to audio processing and core transcription parameters to achieve immediate quality gains.
