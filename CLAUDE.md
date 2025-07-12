@@ -104,6 +104,10 @@ DictationController (Main State Machine)
 
 **ShortcutCenter** (`Controllers/ShortcutCenter.swift`): Manages global keyboard shortcuts using KeyboardShortcuts framework. Supports both toggle and push-to-talk modes with configurable shortcuts.
 
+**HistoryWindowView** (`Views/HistoryWindowView.swift`): Standalone SwiftUI view for the History window, separate from Settings. Displays transcription history with search, playback, and export functionality. Opened via WindowGroup with ID "history-window".
+
+**HistoryWindowMonitor** (`Services/HistoryWindowMonitor.swift`): Monitors History window lifecycle similar to SettingsWindowMonitor. Coordinates dock icon visibility when multiple windows are open.
+
 ## Privacy and Permissions
 
 The app requires:
@@ -132,6 +136,8 @@ All transcription happens locally using Core ML - no data leaves the device exce
 - Dock icon behavior managed by DockIconHelper based on user preferences
 - Settings window activation requires temporary dock icon visibility
 - Window management handled by SettingsWindowMonitor to track open state
+- History window available as separate WindowGroup scene with ID "history-window"
+- HistoryWindowMonitor tracks history window lifecycle for dock icon management
 
 ### Audio Processing
 - 16kHz mono required for WhisperKit compatibility

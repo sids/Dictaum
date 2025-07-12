@@ -12,6 +12,7 @@ enum PreferencesTab: Int, CaseIterable {
     case model = 1
     case advanced = 2
     case permissions = 3
+    case history = 4
 }
 
 struct SettingsView: View {
@@ -50,6 +51,13 @@ struct SettingsView: View {
                     Label("Permissions", systemImage: "lock.shield")
                 }
                 .tag(PreferencesTab.permissions)
+            
+            HistoryTab(store: store)
+                .navigationTitle(SettingsView.windowTitle)
+                .tabItem {
+                    Label("History", systemImage: "clock.arrow.circlepath")
+                }
+                .tag(PreferencesTab.history)
         }
         .padding()
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

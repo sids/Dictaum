@@ -42,8 +42,9 @@ class DictationController: ObservableObject {
         setupAudioSession()
         observeModelChanges()
         
-        // Initialize settings window monitor
+        // Initialize window monitors
         _ = SettingsWindowMonitor.shared
+        _ = HistoryWindowMonitor.shared
         
         Task {
             await setupTranscriberIfNeeded()
@@ -234,6 +235,11 @@ class DictationController: ObservableObject {
                 print("Transcribing complete buffer of \(buffer.count) samples")
                 let transcription = try await transcriber?.transcribe(buffer)
                 if let text = transcription, !text.isEmpty {
+                    // Capture for history if enabled
+                    if SettingsStore.shared.historyEnabled {
+                        await captureHistoryEntry(audioBuffer: buffer, transcript: text)
+                    }
+                    
                     print("Pasting transcribed text: '\(text)'")
                     pasteService.paste(text)
                 } else {
@@ -282,5 +288,91 @@ class DictationController: ObservableObject {
         transcriber.suppressBlank = settings.suppressBlank
         
         print("Updated transcriber parameters from settings")
+    }
+    
+    private func captureHistoryEntry(audioBuffer: [Float], transcript: String) async {
+        guard transcriber != nil else { return }
+        
+        let timestamp = Date()
+        let duration = Double(audioBuffer.count) / 16000.0 // 16kHz sample rate
+        let settings = SettingsStore.shared
+        
+        // Convert audio buffer to WAV data
+        let audioData = convertAudioBufferToWAV(audioBuffer: audioBuffer)
+        
+        // Save audio file
+        guard let audioFilePath = HistoryManager.shared.saveAudioFile(data: audioData, timestamp: timestamp) else {
+            print("Failed to save audio file for history")
+            return
+        }
+        
+        // Create quality metrics
+        let quality = TranscriptionQuality(
+            temperature: settings.temperature,
+            beamSize: settings.beamSize,
+            bestOf: settings.bestOf,
+            topK: settings.topK,
+            enableTimestamps: settings.enableTimestamps
+        )
+        
+        // Create history entry
+        let historyEntry = HistoryEntry(
+            timestamp: timestamp,
+            audioFilePath: audioFilePath,
+            transcript: transcript,
+            duration: duration,
+            modelUsed: settings.selectedModel,
+            language: settings.selectedLanguage,
+            quality: quality
+        )
+        
+        // Save to history
+        HistoryManager.shared.addEntry(historyEntry)
+        
+        print("Captured history entry: \(transcript.prefix(50))...")
+    }
+    
+    private func convertAudioBufferToWAV(audioBuffer: [Float]) -> Data {
+        // Convert Float array to Data in WAV format
+        let sampleRate: Int32 = 16000
+        let channels: Int16 = 1
+        let bitsPerSample: Int16 = 16
+        
+        // Convert Float samples to Int16
+        let int16Samples = audioBuffer.map { sample in
+            Int16(max(-32768, min(32767, sample * 32767)))
+        }
+        
+        // Create WAV header
+        let dataSize = int16Samples.count * 2 // 2 bytes per sample
+        let fileSize = 44 + dataSize - 8 // Total file size - 8 bytes
+        
+        var wavData = Data()
+        
+        // RIFF header
+        wavData.append("RIFF".data(using: .ascii)!)
+        wavData.append(withUnsafeBytes(of: Int32(fileSize).littleEndian) { Data($0) })
+        wavData.append("WAVE".data(using: .ascii)!)
+        
+        // fmt chunk
+        wavData.append("fmt ".data(using: .ascii)!)
+        wavData.append(withUnsafeBytes(of: Int32(16).littleEndian) { Data($0) }) // chunk size
+        wavData.append(withUnsafeBytes(of: Int16(1).littleEndian) { Data($0) }) // audio format (PCM)
+        wavData.append(withUnsafeBytes(of: channels.littleEndian) { Data($0) })
+        wavData.append(withUnsafeBytes(of: sampleRate.littleEndian) { Data($0) })
+        wavData.append(withUnsafeBytes(of: (sampleRate * Int32(channels) * Int32(bitsPerSample) / 8).littleEndian) { Data($0) }) // byte rate
+        wavData.append(withUnsafeBytes(of: (channels * bitsPerSample / 8).littleEndian) { Data($0) }) // block align
+        wavData.append(withUnsafeBytes(of: bitsPerSample.littleEndian) { Data($0) })
+        
+        // data chunk
+        wavData.append("data".data(using: .ascii)!)
+        wavData.append(withUnsafeBytes(of: Int32(dataSize).littleEndian) { Data($0) })
+        
+        // Audio data
+        for sample in int16Samples {
+            wavData.append(withUnsafeBytes(of: sample.littleEndian) { Data($0) })
+        }
+        
+        return wavData
     }
 }

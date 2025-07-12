@@ -33,6 +33,11 @@ class SettingsStore: ObservableObject {
     @AppStorage("compressionRatioThreshold") var compressionRatioThreshold: Double = 2.4
     @AppStorage("suppressBlank") var suppressBlank: Bool = true
     
+    // History settings
+    @AppStorage("historyEnabled") var historyEnabled: Bool = true
+    @AppStorage("historyRetentionDays") var historyRetentionDays: Int = 30
+    @AppStorage("historyMaxEntries") var historyMaxEntries: Int = 1000
+    
     private init() {
         setupDefaultShortcuts()
     }

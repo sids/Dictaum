@@ -20,11 +20,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         
+        // Initialize window monitors
+        _ = SettingsWindowMonitor.shared
+        _ = HistoryWindowMonitor.shared
     }
     
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        // Check if settings window is open
-        if isSettingsWindowOpen() {
+        // Check if any windows are open
+        let hasOpenWindows = isSettingsWindowOpen() || isHistoryWindowOpen()
+        
+        if hasOpenWindows {
             // Show confirmation dialog
             let alert = NSAlert()
             alert.messageText = "Quit Dictaum?"
@@ -32,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             alert.alertStyle = .warning
             
             _ = alert.addButton(withTitle: "Quit")
-            _ = alert.addButton(withTitle: "Close Settings Window")
+            _ = alert.addButton(withTitle: "Close Windows")
             
             let response = alert.runModal()
             
@@ -40,13 +45,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 // User chose "Quit"
                 return .terminateNow
             } else {
-                // User chose "Close Settings Window"
-                closeSettingsWindow()
+                // User chose "Close Windows"
+                closeAllWindows()
                 return .terminateCancel
             }
         }
         
-        // No settings window open, allow normal termination
+        // No windows open, allow normal termination
         return .terminateNow
     }
     
@@ -56,7 +61,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func isSettingsWindowOpen() -> Bool {
         return NSApp.windows.contains { window in
-            window.isVisible && isSettingsWindow(window)
+            window.isVisible && (isSettingsWindow(window) || isHistoryWindow(window))
         }
     }
     
@@ -68,9 +73,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                (window.title.isEmpty && window.contentViewController != nil)
     }
     
+    private func isHistoryWindowOpen() -> Bool {
+        return NSApp.windows.contains { window in
+            window.isVisible && isHistoryWindow(window)
+        }
+    }
+    
+    private func isHistoryWindow(_ window: NSWindow) -> Bool {
+        return window.title.contains("History") ||
+               window.title.contains("Transcription History")
+    }
+    
     private func closeSettingsWindow() {
         for window in NSApp.windows {
             if window.isVisible && isSettingsWindow(window) {
+                window.close()
+            }
+        }
+    }
+    
+    private func closeAllWindows() {
+        for window in NSApp.windows {
+            if window.isVisible && (isSettingsWindow(window) || isHistoryWindow(window)) {
                 window.close()
             }
         }
@@ -133,13 +157,30 @@ struct DictaumApp: App {
                 .environmentObject(dictationController)
         }
         .windowResizability(.contentSize)
+        
+        // History window - single instance only
+        Window("Transcription History", id: "history-window") {
+            HistoryWindowView()
+                .frame(minWidth: 800, idealWidth: 1000, minHeight: 600, idealHeight: 700)
+                .environmentObject(dictationController)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
 struct MenuBarContentView: View {
+    @Environment(\.openWindow) private var openWindow
+    
     var body: some View {
         Button("Settings...") {
             AppDelegate.showSettingsWindow()
         }
+        .keyboardShortcut(",", modifiers: .command)
+        
+        Button("History...") {
+            DockIconHelper.setHidden(false)
+            openWindow(id: "history-window")
+        }
+        .keyboardShortcut("h", modifiers: .command)
     }
 }
