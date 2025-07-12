@@ -51,19 +51,19 @@ class DictationController: ObservableObject {
     }
     
     private func setupShortcuts() {
-        shortcutCenter.onToggleAction = { [weak self] in
+        shortcutCenter.onDictationTap = { [weak self] in
             Task { @MainActor in
                 await self?.toggleRecording()
             }
         }
         
-        shortcutCenter.onPushToTalkStart = { [weak self] in
+        shortcutCenter.onDictationHoldStart = { [weak self] in
             Task { @MainActor in
                 await self?.startRecording()
             }
         }
         
-        shortcutCenter.onPushToTalkEnd = { [weak self] in
+        shortcutCenter.onDictationHoldEnd = { [weak self] in
             Task { @MainActor in
                 await self?.stopRecording()
             }

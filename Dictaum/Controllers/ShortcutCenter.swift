@@ -9,31 +9,42 @@ import Foundation
 import KeyboardShortcuts
 
 class ShortcutCenter {
-    var onToggleAction: (() -> Void)?
-    var onPushToTalkStart: (() -> Void)?
-    var onPushToTalkEnd: (() -> Void)?
+    var onDictationTap: (() -> Void)?
+    var onDictationHoldStart: (() -> Void)?
+    var onDictationHoldEnd: (() -> Void)?
     
-    private var isPushToTalkActive = false
+    private var isHoldActive = false
+    private var holdTimer: Timer?
+    private let holdThreshold: TimeInterval = 0.3 // 300ms
     
     func installHandlers() {
-        KeyboardShortcuts.onKeyDown(for: .toggleDictation) { [weak self] in
-            guard let self = self, !self.isPushToTalkActive else { return }
-            self.onToggleAction?()
-        }
-        
-        KeyboardShortcuts.onKeyDown(for: .pushToTalk) { [weak self] in
+        KeyboardShortcuts.onKeyDown(for: .dictation) { [weak self] in
             guard let self = self else { return }
-            if !self.isPushToTalkActive {
-                self.isPushToTalkActive = true
-                self.onPushToTalkStart?()
+            
+            // Start timer to detect hold
+            self.holdTimer = Timer.scheduledTimer(withTimeInterval: self.holdThreshold, repeats: false) { _ in
+                // Threshold reached - this is a hold
+                if !self.isHoldActive {
+                    self.isHoldActive = true
+                    self.onDictationHoldStart?()
+                }
             }
         }
         
-        KeyboardShortcuts.onKeyUp(for: .pushToTalk) { [weak self] in
+        KeyboardShortcuts.onKeyUp(for: .dictation) { [weak self] in
             guard let self = self else { return }
-            if self.isPushToTalkActive {
-                self.isPushToTalkActive = false
-                self.onPushToTalkEnd?()
+            
+            // Cancel timer
+            self.holdTimer?.invalidate()
+            self.holdTimer = nil
+            
+            if self.isHoldActive {
+                // This was a hold - end it
+                self.isHoldActive = false
+                self.onDictationHoldEnd?()
+            } else {
+                // This was a quick tap
+                self.onDictationTap?()
             }
         }
     }

@@ -39,10 +39,17 @@ class SettingsStore: ObservableObject {
     
     private func setupDefaultShortcuts() {
         if !UserDefaults.standard.bool(forKey: "hasSetupDefaultShortcuts") {
-            KeyboardShortcuts.setShortcut(.init(KeyboardShortcuts.Key(rawValue: 50), modifiers: [.control]), for: .toggleDictation)
-            KeyboardShortcuts.setShortcut(.init(.escape, modifiers: [.control]), for: .pushToTalk)
+            KeyboardShortcuts.setShortcut(.init(.escape, modifiers: [.control]), for: .dictation)
             UserDefaults.standard.set(true, forKey: "hasSetupDefaultShortcuts")
         }
+    }
+    
+    func resetDictationShortcutToDefault() {
+        KeyboardShortcuts.setShortcut(.init(.escape, modifiers: [.control]), for: .dictation)
+    }
+    
+    var defaultDictationShortcut: KeyboardShortcuts.Shortcut {
+        return .init(.escape, modifiers: [.control])
     }
     
     func openSettingsWithModelTab() {
@@ -51,7 +58,6 @@ class SettingsStore: ObservableObject {
 }
 
 extension KeyboardShortcuts.Name {
-    static let toggleDictation = Self("toggleDictation")
-    static let pushToTalk = Self("pushToTalk")
+    static let dictation = Self("dictation")
 }
 

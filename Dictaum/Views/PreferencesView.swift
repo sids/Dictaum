@@ -235,6 +235,39 @@ struct GeneralTab: View {
             }
             
             Section {
+                VStack(alignment: .leading) {
+                    Spacer(minLength: 8)
+                    
+                    KeyboardShortcuts.Recorder("Dictation", name: .dictation)
+
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Quick tap: Toggle recording on/off.")
+                                .font(.caption)
+                                .foregroundColor(.primary.opacity(0.8))
+                            Text("Hold down: Push-to-talk mode.")
+                                .font(.caption)
+                                .foregroundColor(.primary.opacity(0.8))
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Default: control + esc") {
+                            SettingsStore.shared.resetDictationShortcutToDefault()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.caption2)
+                        .foregroundColor(.accentColor)
+                    }
+                    .padding(.top, 4)
+                }
+            } header: {
+                Text("Keyboard Shortcut")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondaryAccent)
+            }
+            
+            Section {
                 Picker("Language", selection: $store.selectedLanguage) {
                     ForEach(LanguageOption.allCases, id: \.self) { language in
                         Text(language.displayName).tag(language.rawValue)
@@ -256,34 +289,6 @@ struct GeneralTab: View {
                     .padding(.top, 4)
             } header: {
                 Text("Transcription")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondaryAccent)
-            }
-            
-            Section {
-                VStack(alignment: .leading) {
-                    Spacer(minLength: 8)
-                    
-                    KeyboardShortcuts.Recorder("Start/Stop (Toggle)", name: .toggleDictation)
-
-                    Text("Press once to start recording, press again to stop.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 4)
-                }
-
-                VStack (alignment: .leading){
-                    Spacer(minLength: 8)
-                    
-                    KeyboardShortcuts.Recorder("Push-to-Talk (Hold)", name: .pushToTalk)
-                    
-                    Text("Hold down the shortcut to record, release to stop.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 4)
-                }
-            } header: {
-                Text("Recording Shortcuts")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondaryAccent)
             }
