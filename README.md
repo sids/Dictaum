@@ -3,6 +3,8 @@
   
   # Dictaum
   
+  **Speech-to-Text for Pros**
+  
   A lightweight macOS menu bar app for real-time speech-to-text transcription with local processing. Dictaum captures audio via configurable keyboard shortcuts and automatically pastes transcribed text into any application.
 </div>
 
@@ -10,12 +12,37 @@
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+## Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [TestFlight Beta](#testflight-beta)
+  - [Mac App Store](#mac-app-store-coming-soon)
+  - [Build from Source](#build-from-source)
+- [Usage](#usage)
+- [Building](#building)
+  - [Prerequisites](#prerequisites)
+  - [Build Steps](#build-steps)
+  - [Running Tests](#running-tests)
+- [Architecture](#architecture)
+- [Contributing](#contributing)
+  - [Getting Started](#getting-started)
+  - [Code Style](#code-style)
+  - [Reporting Issues](#reporting-issues)
+- [Privacy](#privacy)
+- [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Author](#author)
+
 ## Features
 
 - 🎙️ **Real-time transcription** - Speech-to-text with minimal latency
 - 🔒 **100% local processing** - All transcription happens on-device using WhisperKit (Core ML)
 - ⌨️ **Global keyboard shortcuts** - Toggle or push-to-talk modes
-- 📊 **Visual feedback** - Animated waveform overlay during recording
+- 📊 **Visual feedback** - Animated waveform overlay during transcription
 - 🎯 **Auto-paste** - Transcribed text automatically inserted at cursor position
 - 🎛️ **Multiple models** - Choose between speed and accuracy
 - 🚀 **Native performance** - Built with SwiftUI for macOS
@@ -28,8 +55,12 @@
 
 ## Installation
 
+### TestFlight Beta
+Join the beta and help test Dictaum:
+- [Join TestFlight Beta](https://testflight.apple.com/join/Zc99R38Q)
+
 ### Mac App Store (Coming Soon)
-Dictaum will be available on the Mac App Store soon. Until then, you can build and install from source.
+Dictaum will be available on the Mac App Store soon.
 
 ### Build from Source
 See [Building](#building) section below for instructions on building and running Dictaum locally.
@@ -41,11 +72,12 @@ See [Building](#building) section below for instructions on building and running
    - Grant accessibility permissions for auto-paste functionality
    - Download a WhisperKit model from Settings → Models tab (small model recommended for balance of speed/accuracy)
 
-2. **Recording** (Default shortcuts - customizable in Settings)
-   - **Toggle mode**: Press `Ctrl+`` to start/stop recording
-   - **Push-to-talk**: Hold `Ctrl+Esc` while speaking
-   - Visual waveform appears at bottom of screen during recording
-   - Shortcuts can be customized in Settings → Shortcuts tab
+2. **Transcription** (Default: `Ctrl+Esc`)
+   - **Toggle mode**: Tap once and begin dictation; tap again to transcribe and paste
+   - **Push-to-talk**: Press and hold; dictate to transcribe only while the button is held
+   - Visual waveform appears at bottom of screen during transcription
+   - Transcribed text automatically pastes at cursor position when transcription ends
+   - Customize shortcut in Settings → Shortcuts tab
 
 3. **Settings**
    - Click menu bar icon → Settings
@@ -81,6 +113,11 @@ open Dictaum.xcodeproj
 xcodebuild -project Dictaum.xcodeproj -scheme Dictaum -configuration Release build
 ```
 
+5. Find the built app:
+   - The app will be located at `build/Release/Dictaum.app`
+   - You can open it directly: `open build/Release/Dictaum.app`
+   - Or drag it to your Applications folder for permanent installation
+
 ### Running Tests
 
 ```bash
@@ -95,7 +132,7 @@ xcodebuild test -project Dictaum.xcodeproj -scheme Dictaum -destination 'platfor
 
 Dictaum uses a modular architecture with clear separation of concerns:
 
-- **DictationController** - Central state machine managing the recording workflow
+- **DictationController** - Central state machine managing the transcription workflow
 - **MicRecorder** - Audio capture and processing using AVAudioEngine
 - **Transcriber** - WhisperKit integration for speech-to-text
 - **PasteService** - Text insertion via accessibility APIs

@@ -242,12 +242,24 @@ struct GeneralTab: View {
 
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Quick tap: Toggle recording on/off.")
-                                .font(.caption)
-                                .foregroundColor(.primary.opacity(0.8))
-                            Text("Hold down: Push-to-talk mode.")
-                                .font(.caption)
-                                .foregroundColor(.primary.opacity(0.8))
+                            HStack(spacing: 4) {
+                                Text("Toggle mode:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary.opacity(0.8))
+                                Text("Tap once and begin dictation; tap again to transcribe and paste")
+                                    .font(.caption)
+                                    .foregroundColor(.primary.opacity(0.8))
+                            }
+                            HStack(spacing: 4) {
+                                Text("Push-to-talk:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary.opacity(0.8))
+                                Text("Press and hold; dictate to transcribe only while the button is held")
+                                    .font(.caption)
+                                    .foregroundColor(.primary.opacity(0.8))
+                            }
                         }
                         
                         Spacer()
@@ -262,7 +274,7 @@ struct GeneralTab: View {
                     .padding(.top, 4)
                 }
             } header: {
-                Text("Keyboard Shortcut")
+                Text("Transcription Shortcuts")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondaryAccent)
             }
