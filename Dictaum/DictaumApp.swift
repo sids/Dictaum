@@ -99,7 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // Find and focus the settings window
             for window in NSApp.windows {
-                if window.isVisible && (window.title == PreferencesView.windowTitle) {
+                if window.isVisible && (window.title == SettingsView.windowTitle) {
                     window.orderFrontRegardless()
                 }
             }
@@ -128,7 +128,7 @@ struct DictaumApp: App {
         
         // Application menu commands
         Settings {
-            PreferencesView()
+            SettingsView()
                 .frame(width: 600, height: 500)
                 .environmentObject(dictationController)
         }
