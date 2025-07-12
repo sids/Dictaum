@@ -50,6 +50,24 @@ class DictationController: ObservableObject {
         }
     }
     
+    deinit {
+        // Cancel any ongoing recording task
+        recordingTask?.cancel()
+        
+        // Cancel all Combine subscriptions
+        cancellables.removeAll()
+        
+        // Clean up MicRecorder resources
+        micRecorder = nil
+        
+        // Clean up transcriber
+        transcriber = nil
+        
+        // Note: We can't safely clean up @MainActor isolated properties from deinit
+        // The overlay window and shared instance will be cleaned up automatically
+        // when the object is deallocated, or can be handled by the app lifecycle
+    }
+    
     private func setupShortcuts() {
         shortcutCenter.onDictationTap = { [weak self] in
             Task { @MainActor in

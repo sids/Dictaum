@@ -15,6 +15,7 @@ class MicRecorder {
     private var recordingBuffer = [Float]()
     private var isRecording = false
     private var hasTap = false
+    private let audioQueue = DispatchQueue(label: "com.dictaum.audio", qos: .userInitiated)
     
     var onLevelUpdate: (([CGFloat]) -> Void)?
     
@@ -52,6 +53,31 @@ class MicRecorder {
         startPrerollBuffer()
     }
     
+    deinit {
+        // Stop recording if active
+        isRecording = false
+        isPrerollActive = false
+        
+        // Stop and invalidate timer
+        levelTimer?.invalidate()
+        levelTimer = nil
+        
+        // Proper cleanup order: stop engine first, then remove taps
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove audio tap if installed
+        removeTapIfNeeded()
+        
+        // Clear buffers
+        recordingBuffer.removeAll()
+        prerollBuffer.removeAll()
+        
+        // Clear callback to prevent retain cycles
+        onLevelUpdate = nil
+    }
+    
     private func setupAudioSession() {
         #if os(macOS)
         #else
@@ -69,6 +95,8 @@ class MicRecorder {
         
         await requestMicrophonePermission()
         
+        // Stop pre-roll buffer mode
+        isPrerollActive = false
         isRecording = true
         recordingBuffer.removeAll()
         
@@ -100,47 +128,46 @@ class MicRecorder {
             )!
         )!
         
-        // Remove existing tap if any
-        if hasTap {
-            inputNode!.removeTap(onBus: 0)
-            hasTap = false
-        }
-        
-        inputNode!.installTap(onBus: 0, bufferSize: bufferSize, format: tapFormat) { [weak self] buffer, _ in
-            guard let self = self else { return }
+        // Safely remove existing tap and install new one
+        audioQueue.sync {
+            removeTapIfNeeded()
             
-            let pcmBuffer = AVAudioPCMBuffer(
-                pcmFormat: converter.outputFormat,
-                frameCapacity: AVAudioFrameCount(
-                    Double(buffer.frameLength) * (self.targetSampleRate / tapFormat.sampleRate)
-                )
-            )!
-            
-            var error: NSError?
-            converter.convert(to: pcmBuffer, error: &error) { _, outStatus in
-                outStatus.pointee = .haveData
-                return buffer
-            }
-            
-            if error == nil {
-                let channelData = pcmBuffer.floatChannelData![0]
-                let frameLength = Int(pcmBuffer.frameLength)
-                let samples = Array(UnsafeBufferPointer(start: channelData, count: frameLength))
+            inputNode!.installTap(onBus: 0, bufferSize: bufferSize, format: tapFormat) { [weak self] buffer, _ in
+                guard let self = self else { return }
                 
-                if self.isRecording {
-                    self.recordingBuffer.append(contentsOf: samples)
-                } else {
-                    // Still in pre-roll mode, add to pre-roll buffer
-                    self.addToPrerollBuffer(samples)
+                let pcmBuffer = AVAudioPCMBuffer(
+                    pcmFormat: converter.outputFormat,
+                    frameCapacity: AVAudioFrameCount(
+                        Double(buffer.frameLength) * (self.targetSampleRate / tapFormat.sampleRate)
+                    )
+                )!
+                
+                var error: NSError?
+                converter.convert(to: pcmBuffer, error: &error) { _, outStatus in
+                    outStatus.pointee = .haveData
+                    return buffer
                 }
                 
-                self.updateLevels(from: samples)
-            } else {
-                print("Audio conversion error: \(error?.localizedDescription ?? "Unknown error")")
+                if error == nil {
+                    let channelData = pcmBuffer.floatChannelData![0]
+                    let frameLength = Int(pcmBuffer.frameLength)
+                    let samples = Array(UnsafeBufferPointer(start: channelData, count: frameLength))
+                    
+                    if self.isRecording {
+                        self.recordingBuffer.append(contentsOf: samples)
+                    } else {
+                        // Still in pre-roll mode, add to pre-roll buffer
+                        self.addToPrerollBuffer(samples)
+                    }
+                    
+                    self.updateLevels(from: samples)
+                } else {
+                    print("Audio conversion error: \(error?.localizedDescription ?? "Unknown error")")
+                }
             }
+            
+            hasTap = true
         }
-        
-        hasTap = true
         
         if !audioEngine.isRunning {
             try audioEngine.start()
@@ -167,8 +194,10 @@ class MicRecorder {
         let result = applyFadeIn(to: filteredSamples)
         logAudioLevels(samples: result, label: "Final processed")
         
-        // Restart pre-roll buffer
-        startPrerollBuffer()
+        // Restart pre-roll buffer - but only if we're not already in the middle of cleanup
+        if !isPrerollActive {
+            startPrerollBuffer()
+        }
         
         return result
     }
@@ -236,7 +265,7 @@ class MicRecorder {
     // MARK: - Pre-roll Buffer Methods
     
     private func startPrerollBuffer() {
-        guard !isPrerollActive else { return }
+        guard !isPrerollActive && !isRecording else { return }
         
         Task {
             await requestMicrophonePermission()
@@ -246,7 +275,14 @@ class MicRecorder {
             
             inputNode = audioEngine.inputNode
             let recordingFormat = inputNode!.outputFormat(forBus: 0)
-            let tapFormat = recordingFormat
+            
+            // Use the same format creation logic as startRecording() to avoid format mismatch
+            let tapFormat = AVAudioFormat(
+                commonFormat: .pcmFormatFloat32,
+                sampleRate: recordingFormat.sampleRate,
+                channels: recordingFormat.channelCount,
+                interleaved: false
+            )!
             
             let converter = AVAudioConverter(
                 from: tapFormat,
@@ -258,48 +294,54 @@ class MicRecorder {
                 )!
             )!
             
-            if hasTap {
-                inputNode!.removeTap(onBus: 0)
-                hasTap = false
-            }
-            
-            inputNode!.installTap(onBus: 0, bufferSize: bufferSize, format: tapFormat) { [weak self] buffer, _ in
-                guard let self = self else { return }
+            // Safely remove existing tap and install new one
+            audioQueue.sync {
+                removeTapIfNeeded()
                 
-                let pcmBuffer = AVAudioPCMBuffer(
-                    pcmFormat: converter.outputFormat,
-                    frameCapacity: AVAudioFrameCount(
-                        Double(buffer.frameLength) * (self.targetSampleRate / tapFormat.sampleRate)
-                    )
-                )!
-                
-                var error: NSError?
-                converter.convert(to: pcmBuffer, error: &error) { _, outStatus in
-                    outStatus.pointee = .haveData
-                    return buffer
-                }
-                
-                if error == nil {
-                    let channelData = pcmBuffer.floatChannelData![0]
-                    let frameLength = Int(pcmBuffer.frameLength)
-                    let samples = Array(UnsafeBufferPointer(start: channelData, count: frameLength))
+                inputNode!.installTap(onBus: 0, bufferSize: bufferSize, format: tapFormat) { [weak self] buffer, _ in
+                    guard let self = self else { return }
                     
-                    if self.isRecording {
-                        self.recordingBuffer.append(contentsOf: samples)
-                    } else {
-                        self.addToPrerollBuffer(samples)
+                    let pcmBuffer = AVAudioPCMBuffer(
+                        pcmFormat: converter.outputFormat,
+                        frameCapacity: AVAudioFrameCount(
+                            Double(buffer.frameLength) * (self.targetSampleRate / tapFormat.sampleRate)
+                        )
+                    )!
+                    
+                    var error: NSError?
+                    converter.convert(to: pcmBuffer, error: &error) { _, outStatus in
+                        outStatus.pointee = .haveData
+                        return buffer
                     }
                     
-                    self.updateLevels(from: samples)
-                } else {
-                    print("Audio conversion error: \(error?.localizedDescription ?? "Unknown error")")
+                    if error == nil {
+                        let channelData = pcmBuffer.floatChannelData![0]
+                        let frameLength = Int(pcmBuffer.frameLength)
+                        let samples = Array(UnsafeBufferPointer(start: channelData, count: frameLength))
+                        
+                        if self.isRecording {
+                            self.recordingBuffer.append(contentsOf: samples)
+                        } else {
+                            self.addToPrerollBuffer(samples)
+                        }
+                        
+                        self.updateLevels(from: samples)
+                    } else {
+                        print("Audio conversion error: \(error?.localizedDescription ?? "Unknown error")")
+                    }
                 }
+                
+                hasTap = true
             }
             
-            hasTap = true
-            
             if !audioEngine.isRunning {
-                try? audioEngine.start()
+                do {
+                    try audioEngine.start()
+                } catch {
+                    print("Failed to start audio engine for pre-roll: \(error)")
+                    isPrerollActive = false
+                    hasTap = false
+                }
             }
         }
     }
@@ -312,6 +354,17 @@ class MicRecorder {
             let excessSamples = prerollBuffer.count - prerollSampleCount
             prerollBuffer.removeFirst(excessSamples)
         }
+    }
+    
+    // MARK: - Tap Management
+    
+    private func removeTapIfNeeded() {
+        guard hasTap && inputNode != nil else { return }
+        
+        // Always try to remove the tap, regardless of engine state
+        // AVAudioEngine will handle the case where engine is stopped
+        inputNode?.removeTap(onBus: 0)
+        hasTap = false
     }
     
     // MARK: - Audio Processing Methods
