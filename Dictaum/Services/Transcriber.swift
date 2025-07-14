@@ -103,9 +103,9 @@ class Transcriber {
             audioArray: audioSamples,
             decodeOptions: options
         )
-        
-        let transcription = results.flatMap { $0.segments.map { $0.text } }.joined(separator: " ").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-        
+
+        let transcription = results.flatMap { $0.segments.map { $0.text.trimmingCharacters(in: .whitespaces) } }.filter { !$0.isEmpty }.joined(separator: " ")
+
         // Log parameters and results for experimentation
         print("[Transcriber] Parameters - temp: \(temperature), beamSize: \(beamSize), bestOf: \(bestOf), topK: \(topK)")
         print("[Transcriber] Transcription: \(transcription)")
