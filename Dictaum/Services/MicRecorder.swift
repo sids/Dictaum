@@ -44,16 +44,23 @@ class MicRecorder {
     private let targetPeakLevel: Float = -12.0 // -12 dBFS target
     private let targetLevelTolerance: Float = 3.0 // ±3 dB tolerance
     
+    // Flag to handle audio device changes safely
+    private var isReconfiguring = false
+    
     init() {
         // Suppress verbose audio system warnings in console
         UserDefaults.standard.set(true, forKey: "com.apple.coreaudio.silenceOutput")
         
         setupAudioSession()
         setupHighPassFilter()
+        addConfigurationChangeObserver()
         startPrerollBuffer()
     }
     
     deinit {
+        // Remove observer to prevent memory leaks
+        NotificationCenter.default.removeObserver(self)
+        
         // Stop recording if active
         isRecording = false
         isPrerollActive = false
@@ -88,9 +95,15 @@ class MicRecorder {
     }
     
     func startRecording() async throws {
-        guard !isRecording else { 
+        // Wait for any reconfiguration to finish before starting
+        while isReconfiguring {
+            print("[MicRecorder] Waiting for audio engine reconfiguration...")
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        }
+        
+        guard !isRecording else {
             print("[MicRecorder] Already recording, ignoring start request")
-            return 
+            return
         }
         
         await requestMicrophonePermission()
@@ -177,9 +190,9 @@ class MicRecorder {
     }
     
     func stopRecording() async throws -> [Float] {
-        guard isRecording else { 
+        guard isRecording else {
             print("[MicRecorder] Not recording, ignoring stop request")
-            return [] 
+            return []
         }
         
         isRecording = false
@@ -262,19 +275,65 @@ class MicRecorder {
         }
     }
     
+    // MARK: - System Notifications
+    
+    private func addConfigurationChangeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioEngineConfigurationChange),
+            name: .AVAudioEngineConfigurationChange,
+            object: audioEngine
+        )
+    }
+    
+    @objc private func handleAudioEngineConfigurationChange(_ notification: Notification) {
+        print("[MicRecorder] Audio engine configuration changed, re-initializing.")
+        
+        guard !isReconfiguring else {
+            print("[MicRecorder] Already reconfiguring, ignoring.")
+            return
+        }
+        isReconfiguring = true
+        
+        audioQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Stop all current audio processing
+            self.isRecording = false
+            self.isPrerollActive = false
+            self.stopLevelTimer()
+            
+            // Stop and remove observer for the old engine
+            if self.audioEngine.isRunning {
+                self.audioEngine.stop()
+            }
+            NotificationCenter.default.removeObserver(self, name: .AVAudioEngineConfigurationChange, object: self.audioEngine)
+            self.removeTapIfNeeded()
+            
+            // Re-create the audio engine and add an observer for the new one
+            self.audioEngine = AVAudioEngine()
+            self.addConfigurationChangeObserver()
+            
+            // Restart pre-roll buffering. This will reset the isReconfiguring flag when done.
+            self.startPrerollBuffer()
+        }
+    }
+    
     // MARK: - Pre-roll Buffer Methods
     
     private func startPrerollBuffer() {
         guard !isPrerollActive && !isRecording else { return }
         
-        Task {
-            await requestMicrophonePermission()
+        Task { [weak self] in
+            guard let self = self else { return }
             
-            isPrerollActive = true
-            prerollBuffer.removeAll()
+            await self.requestMicrophonePermission()
             
-            inputNode = audioEngine.inputNode
-            let recordingFormat = inputNode!.outputFormat(forBus: 0)
+            self.isPrerollActive = true
+            self.prerollBuffer.removeAll()
+            
+            self.inputNode = self.audioEngine.inputNode
+            let recordingFormat = self.inputNode!.outputFormat(forBus: 0)
             
             // Use the same format creation logic as startRecording() to avoid format mismatch
             let tapFormat = AVAudioFormat(
@@ -288,17 +347,17 @@ class MicRecorder {
                 from: tapFormat,
                 to: AVAudioFormat(
                     commonFormat: .pcmFormatFloat32,
-                    sampleRate: targetSampleRate,
+                    sampleRate: self.targetSampleRate,
                     channels: 1,
                     interleaved: false
                 )!
             )!
             
             // Safely remove existing tap and install new one
-            audioQueue.sync {
-                removeTapIfNeeded()
+            self.audioQueue.sync {
+                self.removeTapIfNeeded()
                 
-                inputNode!.installTap(onBus: 0, bufferSize: bufferSize, format: tapFormat) { [weak self] buffer, _ in
+                self.inputNode!.installTap(onBus: 0, bufferSize: self.bufferSize, format: tapFormat) { [weak self] buffer, _ in
                     guard let self = self else { return }
                     
                     let pcmBuffer = AVAudioPCMBuffer(
@@ -331,17 +390,23 @@ class MicRecorder {
                     }
                 }
                 
-                hasTap = true
+                self.hasTap = true
             }
             
-            if !audioEngine.isRunning {
+            if !self.audioEngine.isRunning {
                 do {
-                    try audioEngine.start()
+                    try self.audioEngine.start()
                 } catch {
                     print("Failed to start audio engine for pre-roll: \(error)")
-                    isPrerollActive = false
-                    hasTap = false
+                    self.isPrerollActive = false
+                    self.hasTap = false
                 }
+            }
+            
+            // Mark reconfiguration as complete
+            if self.isReconfiguring {
+                self.isReconfiguring = false
+                print("[MicRecorder] Reconfiguration complete.")
             }
         }
     }
