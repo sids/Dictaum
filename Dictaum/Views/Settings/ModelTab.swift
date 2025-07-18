@@ -195,8 +195,8 @@ struct ModelCard: View {
                         }
                     }
                     
-                    // Speed badge below name
-                    SpeedBadge(speed: model.speed)
+                    // Attribute badges below name
+                    AttributeBadges(attributes: model.attributes)
                     
                     // Size and download info line
                     HStack(spacing: 12) {
@@ -313,16 +313,28 @@ struct ModelCard: View {
     }
 }
 
-struct SpeedBadge: View {
-    let speed: ModelInfo.ModelSpeed
+struct AttributeBadges: View {
+    let attributes: [ModelInfo.ModelAttribute]
     
     var body: some View {
-        Text(speed.rawValue)
+        HStack(spacing: 6) {
+            ForEach(attributes, id: \.self) { attribute in
+                AttributeBadge(attribute: attribute)
+            }
+        }
+    }
+}
+
+struct AttributeBadge: View {
+    let attribute: ModelInfo.ModelAttribute
+    
+    var body: some View {
+        Text(attribute.rawValue)
             .font(.system(size: 10, weight: .medium))
-            .foregroundColor(speed.color)
+            .foregroundColor(attribute.color)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(speed.color.opacity(0.15))
+            .background(attribute.color.opacity(0.15))
             .cornerRadius(4)
     }
 }
@@ -364,10 +376,19 @@ struct ModelDownloadModal: View {
                         Spacer()
                         
                         if case .downloading(let progress) = downloadState {
-                            Text("\(Int(progress * 100))%")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("\(Int(progress * 100))%")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.accentColor)
+                                
+                                // Show helpful text for slow downloads
+                                if progress > 0.3 && progress < 0.7 {
+                                    Text("Large files downloading...")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         } else if case .warming = downloadState {
                             Text("Warming up...")
                                 .font(.subheadline)
@@ -408,6 +429,19 @@ struct ModelDownloadModal: View {
                         Text("This prepares the model for faster transcription")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+                } else if case .downloading(let progress) = downloadState {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if progress > 0.3 && progress < 0.8 {
+                            Label("Large model files are downloading", systemImage: "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                            
+                            Text("Download may slow down during this phase")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.top, 4)
                 }

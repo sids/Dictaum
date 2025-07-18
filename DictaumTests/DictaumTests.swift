@@ -61,27 +61,32 @@ struct DictaumTests {
             displayName: "Test Model",
             diskSize: "100 MB",
             memoryUsage: "~500 MB",
-            speed: .balanced,
-            isEnglishOnly: true
+            attributes: [.balanced, .lowMemory],
+            isEnglishOnly: true,
+            recommendation: "Good for testing"
         )
         
         #expect(model.id == "test-model")
-        #expect(model.speed == .balanced)
-        #expect(model.speed.color != nil)
+        #expect(model.attributes.contains(.balanced))
+        #expect(model.attributes.contains(.lowMemory))
         #expect(model.isEnglishOnly == true)
+        #expect(model.recommendation == "Good for testing")
     }
     
-    @Test func testModelSpeedColors() async throws {
-        // Test that all speed levels have distinct colors
-        let speeds: [ModelInfo.ModelSpeed] = [.fastest, .fast, .balanced, .accurate, .mostAccurate]
-        let colors = speeds.map { $0.color }
+    @Test func testModelAttributeColors() async throws {
+        // Test that all attribute levels have distinct colors
+        let attributes: [ModelInfo.ModelAttribute] = [.veryFast, .fast, .balanced, .accurate, .mostAccurate, .lowMemory, .recommended]
+        let colors = attributes.map { $0.color }
         
-        // Check that we have colors for all speeds
-        #expect(colors.count == speeds.count)
+        // Check that we have colors for all attributes
+        #expect(colors.count == attributes.count)
         
         // Test specific color mappings
-        #expect(ModelInfo.ModelSpeed.fastest.color == .green)
-        #expect(ModelInfo.ModelSpeed.mostAccurate.color == .red)
+        #expect(ModelInfo.ModelAttribute.veryFast.color == .green)
+        #expect(ModelInfo.ModelAttribute.mostAccurate.color == .red)
+        #expect(ModelInfo.ModelAttribute.balanced.color == .blue)
+        #expect(ModelInfo.ModelAttribute.lowMemory.color == .purple)
+        #expect(ModelInfo.ModelAttribute.recommended.color == .accentColor)
     }
     
     @Test func testDictationStateEquality() async throws {
